@@ -29,4 +29,4 @@ COPY --from=builder /app/node_modules ./node_modules
 EXPOSE 3000
 
 # Next.jsのアプリを起動
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "start"]
