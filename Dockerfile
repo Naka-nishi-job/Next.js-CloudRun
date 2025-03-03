@@ -1,32 +1,36 @@
-# ベースイメージ
-FROM node:18-alpine AS builder
+# --- Builder Stage ---
+FROM node:20-alpine AS builder
 
-# 作業ディレクトリを設定
 WORKDIR /app
 
-# 依存関係をコピーしてインストール
-COPY package.json package-lock.json ./
+# 依存関係のインストール
+COPY package*.json ./
 RUN npm install
 
-# アプリのソースコードをコピー
+# アプリケーションソースのコピー
 COPY . .
 
-# Next.jsアプリをビルド
+# Prisma Clientの生成
+# RUN npx prisma generate
+
+# プロダクションビルドの実行
 RUN npm run build
 
-# 軽量の実行環境を使用
-FROM node:18-alpine AS runner
+# --- Production Stage ---
+FROM node:20-alpine
 
 WORKDIR /app
 
-# 必要なファイルのみコピー
-COPY --from=builder /app/package.json /app/package-lock.json ./
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
+# Builder Stageで作成した成果物をコピー
+COPY --from=builder /app ./
 
-# ポートを公開
-EXPOSE 3000
+# Cloud RunはデフォルトでPORT=8080を利用するのでEXPOSEでドキュメント上明記（実際はdocker run時に影響しない）
+EXPOSE 8080
 
-# Next.jsのアプリを起動
-CMD ["npm", "run", "start"]
+# 実行時の環境変数
+ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+ENV NEXTAUTH_URL=${NEXTAUTH_URL}
+ENV DATABASE_URL=${DATABASE_URL}
+
+# プロダクションサーバーを起動
+CMD ["npm", "start"]

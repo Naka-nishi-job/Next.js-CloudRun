@@ -1,4 +1,4 @@
-node_modules
-.next
-.DS_Store
-.git
+# node_modules
+# .next
+# .DS_Store
+# .git
